@@ -1,0 +1,18 @@
+﻿<Window x:Class="SerialComm.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SerialComm"
+        mc:Ignorable="d"
+        Title="Serial Communication"  Height="370" Width="360">
+
+    <Grid>
+        <Button x:Name="btnConnect" Content="Open PORT" HorizontalAlignment="Left" Height="40" Margin="30,34,0,0" VerticalAlignment="Top" Width="119" Click="BtnConnect_Click"/>
+        <TextBox x:Name="txtSend" HorizontalAlignment="Left" Height="80" Margin="30,94,0,0" TextWrapping="Wrap" Text="TextBox Send" VerticalAlignment="Top" Width="300"/>
+        <ComboBox x:Name="cmbPorts" HorizontalAlignment="Left" Height="40" Margin="190,34,0,0" VerticalAlignment="Top" Width="140"/>
+        <Button x:Name="btnSend" Content="Kirim Data" HorizontalAlignment="Left" Height="40" Margin="29,194,0,0" VerticalAlignment="Top" Width="116" Click="BtnSend_Click"/>
+        <CheckBox x:Name="chkNewLine" Content="Newline" HorizontalAlignment="Left" Margin="214,206,0,0" VerticalAlignment="Top"/>
+        <TextBox x:Name="txtReceived" HorizontalAlignment="Left" Height="80" Margin="30,249,0,0" TextWrapping="Wrap" Text="TextBox Receive" VerticalAlignment="Top" Width="300"/>
+    </Grid>
+</Window>
