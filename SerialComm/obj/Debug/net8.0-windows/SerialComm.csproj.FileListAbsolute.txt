@@ -39,3 +39,4 @@ D:\Code\Visual Studio\SerialComm\obj\Debug\net8.0-windows\refint\SerialComm.dll
 D:\Code\Visual Studio\SerialComm\obj\Debug\net8.0-windows\SerialComm.pdb
 D:\Code\Visual Studio\SerialComm\obj\Debug\net8.0-windows\SerialComm.genruntimeconfig.cache
 D:\Code\Visual Studio\SerialComm\obj\Debug\net8.0-windows\ref\SerialComm.dll
+D:\Code\Visual Studio\SerialComm\obj\Debug\net8.0-windows\SerialComm.sourcelink.json

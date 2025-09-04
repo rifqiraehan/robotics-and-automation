@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SerialComm")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+85b696e2543a4d082ff0d3e2f8ef9b4cd831b7bb")]
 [assembly: System.Reflection.AssemblyProductAttribute("SerialComm")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SerialComm")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
