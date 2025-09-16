@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "dgSpecHash": "BpWlU1kD7SM=",
+  "success": true,
+  "projectFilePath": "D:\\Code\\Visual Studio\\SudutMultiServo\\SudutMultiServo.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ASUS\\.nuget\\packages\\communitytoolkit.mvvm\\8.4.0\\communitytoolkit.mvvm.8.4.0.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.android-arm.runtime.native.system.io.ports\\9.0.9\\runtime.android-arm.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.android-arm64.runtime.native.system.io.ports\\9.0.9\\runtime.android-arm64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.android-x64.runtime.native.system.io.ports\\9.0.9\\runtime.android-x64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.android-x86.runtime.native.system.io.ports\\9.0.9\\runtime.android-x86.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-arm.runtime.native.system.io.ports\\9.0.9\\runtime.linux-arm.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-arm64.runtime.native.system.io.ports\\9.0.9\\runtime.linux-arm64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-bionic-arm64.runtime.native.system.io.ports\\9.0.9\\runtime.linux-bionic-arm64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-bionic-x64.runtime.native.system.io.ports\\9.0.9\\runtime.linux-bionic-x64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-musl-arm.runtime.native.system.io.ports\\9.0.9\\runtime.linux-musl-arm.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-musl-arm64.runtime.native.system.io.ports\\9.0.9\\runtime.linux-musl-arm64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-musl-x64.runtime.native.system.io.ports\\9.0.9\\runtime.linux-musl-x64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.linux-x64.runtime.native.system.io.ports\\9.0.9\\runtime.linux-x64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.maccatalyst-arm64.runtime.native.system.io.ports\\9.0.9\\runtime.maccatalyst-arm64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.maccatalyst-x64.runtime.native.system.io.ports\\9.0.9\\runtime.maccatalyst-x64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.native.system.io.ports\\9.0.9\\runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.osx-arm64.runtime.native.system.io.ports\\9.0.9\\runtime.osx-arm64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\runtime.osx-x64.runtime.native.system.io.ports\\9.0.9\\runtime.osx-x64.runtime.native.system.io.ports.9.0.9.nupkg.sha512",
+    "C:\\Users\\ASUS\\.nuget\\packages\\system.io.ports\\9.0.9\\system.io.ports.9.0.9.nupkg.sha512"
+  ],
+  "logs": []
+}
