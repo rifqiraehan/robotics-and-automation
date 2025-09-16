@@ -117,7 +117,7 @@ namespace Sudut
 
                 // Bangun command sesuai protokol SSC-32
                 byte[] header = { 0x0D, 0x0A };
-                string bodyStr = $"#3 P{y:D4} S1000 "; // Channel 3, pulse 4 digits, speed 1000
+                string bodyStr = $"#0 P{y:D4} S1000 "; // Channel 3, pulse 4 digits, speed 1000
                 byte[] body = Encoding.ASCII.GetBytes(bodyStr);
                 byte[] tail = { 0x0D, 0x0A, 0x00 }; // <cr> sebagai \r, tapi gunakan byte
 
