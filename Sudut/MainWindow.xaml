@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Sudut"
         mc:Ignorable="d"
-        Title="Sudut" Height="250" Width="500"
+        Title="Sudut" Height="270" Width="600"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
     <Window.DataContext>
         <local:ServoViewModel />
@@ -21,21 +21,29 @@
         <GroupBox Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,5">
             <StackPanel Orientation="Horizontal" Margin="10">
                 <ComboBox x:Name="cmbPorts" Width="100" Height="25" Margin="0,0,10,0"
-                          ItemsSource="{Binding AvailablePorts}"
-                          SelectedItem="{Binding SelectedPort}"/>
+                  ItemsSource="{Binding AvailablePorts}"
+                  SelectedItem="{Binding SelectedPort}"/>
+
+                <!-- Ganti ToggleButton dengan Button -->
+                <Button Width="80" Height="25" Margin="0,0,10,0"
+                Content="{Binding ClampButtonText}"
+                Command="{Binding ToggleClampCommand}"/>
+
                 <Button Content="Open Port" Width="80" Height="25" Margin="0,0,10,0"
-                        Command="{Binding OpenPortCommand}"/>
+                Command="{Binding OpenPortCommand}"/>
                 <Button Content="Close Port" Width="80" Height="25"
-                        Command="{Binding ClosePortCommand}"/>
+                Command="{Binding ClosePortCommand}"/>
             </StackPanel>
         </GroupBox>
 
+
         <!-- Slider for Sudut -->
         <Slider Grid.Row="1" x:Name="sliderSudut"
-                Minimum="0" Maximum="180"
-                TickFrequency="1" IsSnapToTickEnabled="True"
-                Margin="20,10" Height="25" HorizontalAlignment="Stretch"
-                Value="{Binding Sudut, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+            Minimum="{Binding SudutMinimum}"
+            Maximum="{Binding SudutMaximum}"
+            TickFrequency="1" IsSnapToTickEnabled="True"
+            Margin="20,10" Height="25" HorizontalAlignment="Stretch"
+            Value="{Binding Sudut, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
 
         <!-- Labels, TextBoxes, and Cancel -->
         <Grid Grid.Row="2" Margin="0,10,0,0">

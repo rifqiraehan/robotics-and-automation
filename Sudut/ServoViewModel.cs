@@ -3,60 +3,100 @@ using CommunityToolkit.Mvvm.Input;
 using System;
 using System.Collections.Generic;
 using System.IO.Ports;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 
 namespace Sudut
 {
+    public enum ServoMode
+    {
+        Servo0,   // 0..180
+        Servo23   // -90..+90
+    }
+
     public partial class ServoViewModel : ObservableObject
     {
-        private SerialPort _serialPort = new SerialPort();
+        private readonly SerialPort _serialPort = new();
 
-        [ObservableProperty]
-        private string? selectedPort;
+        [ObservableProperty] private string? selectedPort;
+        [ObservableProperty] private double sudut = 0;
+        [ObservableProperty] private double minPulse = 500;
+        [ObservableProperty] private double maxPulse = 2500;
+        [ObservableProperty] private double interpolatedPulse;
 
-        [ObservableProperty]
-        private double sudut = 90; // Default ke 90°
+        // Servo yang dikontrol user
+        [ObservableProperty] private int selectedServoChannel = 3; // default channel 3
+        [ObservableProperty] private ServoMode servoMode = ServoMode.Servo23;
+        /*[ObservableProperty] private int selectedServoChannel = 0; // default channel 0
+        [ObservableProperty] private ServoMode servoMode = ServoMode.Servo0;*/
 
-        [ObservableProperty]
-        private double minPulse = 500;
+        // === Penjepit (servo 4) ===
+        [ObservableProperty] private bool clampClosed;
+        public int ClampOpenPulse { get; set; } = 770;
+        public int ClampClosePulse { get; set; } = 1700;
+        public string ClampButtonText => ClampClosed ? "Close" : "Open";
 
-        [ObservableProperty]
-        private double maxPulse = 2500;
+        public IEnumerable<string> AvailablePorts { get; } = SerialPort.GetPortNames();
 
-        [ObservableProperty]
-        private double interpolatedPulse; // Read-only, dihitung otomatis
-
-        public IEnumerable<string> AvailablePorts { get; } = SerialPort.GetPortNames(); // Dinamis
+        // Range untuk slider
+        public double SudutMinimum => ServoMode == ServoMode.Servo0 ? 0 : -90;
+        public double SudutMaximum => ServoMode == ServoMode.Servo0 ? 180 : 90;
 
         public ServoViewModel()
         {
-            // PartialOnPropertyChanged untuk auto-update interpolasi saat Sudut/Min/Max berubah
             this.PropertyChanged += (s, e) =>
             {
-                if (e.PropertyName is nameof(Sudut) or nameof(MinPulse) or nameof(MaxPulse))
+                if (e.PropertyName is nameof(Sudut) or nameof(MinPulse) or nameof(MaxPulse) or nameof(ServoMode))
                 {
                     UpdateInterpolatedPulse();
                     if (_serialPort.IsOpen)
-                    {
-                        SendCommandAsync(); // Kirim command saat nilai berubah
-                    }
+                        _ = SendServoCommandAsync(SelectedServoChannel, (int)InterpolatedPulse);
+                }
+                else if (e.PropertyName == nameof(ServoMode))
+                {
+                    OnPropertyChanged(nameof(SudutMinimum));
+                    OnPropertyChanged(nameof(SudutMaximum));
                 }
             };
         }
 
+        partial void OnClampClosedChanged(bool value)
+        {
+            OnPropertyChanged(nameof(ClampButtonText));
+            if (_serialPort.IsOpen)
+                _ = SendServoCommandAsync(4, value ? ClampClosePulse : ClampOpenPulse);
+        }
+
         private void UpdateInterpolatedPulse()
         {
-            if (MinPulse >= MaxPulse || Sudut < 0 || Sudut > 180)
+            if (MinPulse >= MaxPulse)
             {
-                InterpolatedPulse = 0; // Invalid, bisa tambah error message
+                InterpolatedPulse = 0;
                 return;
             }
 
-            // Interpolasi linier: y = min + (max - min) * (sudut / 180)
-            InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * (Sudut / 180.0);
+            switch (ServoMode)
+            {
+                case ServoMode.Servo0:
+                    if (Sudut < 0 || Sudut > 180)
+                    {
+                        InterpolatedPulse = 0;
+                        return;
+                    }
+                    InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * (Sudut / 180.0);
+                    break;
+
+                case ServoMode.Servo23:
+                    if (Sudut < -90 || Sudut > 90)
+                    {
+                        InterpolatedPulse = 0;
+                        return;
+                    }
+                    double normalized = (Sudut + 90) / 180.0;
+                    InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * normalized;
+                    break;
+            }
         }
 
         [RelayCommand]
@@ -67,13 +107,14 @@ namespace Sudut
                 if (!_serialPort.IsOpen && !string.IsNullOrEmpty(SelectedPort))
                 {
                     _serialPort.PortName = SelectedPort;
-                    _serialPort.BaudRate = 115200; // Sesuai PDF
+                    _serialPort.BaudRate = 115200;
                     _serialPort.Parity = Parity.None;
                     _serialPort.DataBits = 8;
                     _serialPort.StopBits = StopBits.One;
                     _serialPort.Handshake = Handshake.None;
-
                     _serialPort.Open();
+
+                    ToggleClampCommand.NotifyCanExecuteChanged();
                     MessageBox.Show($"Port {SelectedPort} opened.");
                 }
             }
@@ -91,6 +132,7 @@ namespace Sudut
                 if (_serialPort.IsOpen)
                 {
                     _serialPort.Close();
+                    ToggleClampCommand.NotifyCanExecuteChanged();
                     MessageBox.Show("Port closed.");
                 }
             }
@@ -107,33 +149,32 @@ namespace Sudut
             Application.Current.Shutdown();
         }
 
-        private async Task SendCommandAsync()
+        private async Task SendServoCommandAsync(int channel, int pulse)
         {
-            if (!_serialPort.IsOpen || InterpolatedPulse <= 0) return;
+            if (!_serialPort.IsOpen || pulse <= 0) return;
 
             try
             {
-                int y = (int)InterpolatedPulse; // Pulse width
-
-                // Bangun command sesuai protokol SSC-32
                 byte[] header = { 0x0D, 0x0A };
-                string bodyStr = $"#0 P{y:D4} S1000 "; // Channel 3, pulse 4 digits, speed 1000
+                string bodyStr = $"#{channel} P{pulse:D4} S1000 ";
                 byte[] body = Encoding.ASCII.GetBytes(bodyStr);
-                byte[] tail = { 0x0D, 0x0A, 0x00 }; // <cr> sebagai \r, tapi gunakan byte
+                byte[] tail = { 0x0D, 0x0A, 0x00 };
 
-                // Gabung array
                 byte[] fullCommand = new byte[header.Length + body.Length + tail.Length];
-                Array.Copy(header, 0, fullCommand, 0, header.Length);
+                Array.Copy(header, fullCommand, header.Length);
                 Array.Copy(body, 0, fullCommand, header.Length, body.Length);
                 Array.Copy(tail, 0, fullCommand, header.Length + body.Length, tail.Length);
 
-                // Kirim async agar UI responsif
                 await Task.Run(() => _serialPort.Write(fullCommand, 0, fullCommand.Length));
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error sending data: {ex.Message}");
+                MessageBox.Show($"Error sending servo data: {ex.Message}");
             }
         }
+
+        [RelayCommand(CanExecute = nameof(CanToggleClamp))]
+        private void ToggleClamp() => ClampClosed = !ClampClosed;
+        private bool CanToggleClamp() => _serialPort.IsOpen;
     }
 }
