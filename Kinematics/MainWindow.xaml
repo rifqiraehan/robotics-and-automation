@@ -1,0 +1,246 @@
+﻿<Window x:Class="Kinematics.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Kinematics"
+        mc:Ignorable="d"
+        Title="Sudut" Height="500" Width="1000"
+        ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+
+    <Window.DataContext>
+        <local:KinematicsViewModel />
+    </Window.DataContext>
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Servo Controls -->
+            <RowDefinition Height="Auto"/>
+            <!-- Middle Section -->
+            <RowDefinition Height="*"/>
+            <!-- Inverse Kinematic -->
+            <RowDefinition Height="Auto"/>
+            <!-- Bottom buttons -->
+        </Grid.RowDefinitions>
+
+        <!-- ================= Servo Controls ================= -->
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Servo 0 -->
+            <GroupBox Header="Servo 0" Grid.Column="0" Margin="5">
+                <StackPanel>
+                    <Slider Minimum="0" Maximum="180" TickFrequency="1"
+                            IsSnapToTickEnabled="True"
+                            Value="{Binding Servo0.Sudut, Mode=TwoWay}" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Sudut" HorizontalAlignment="Center"/>
+                            <TextBox Width="60" Text="{Binding Servo0.Sudut, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Min"/>
+                            <TextBox Width="60" Text="{Binding Servo0.MinPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Maks"/>
+                            <TextBox Width="60" Text="{Binding Servo0.MaxPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Interpolasi"/>
+                            <TextBox Width="60" Text="{Binding Servo0.InterpolatedPulse, Mode=OneWay, StringFormat=N0}" IsReadOnly="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Servo 2 -->
+            <GroupBox Header="Servo 2" Grid.Column="1" Margin="5">
+                <StackPanel>
+                    <Slider Minimum="-90" Maximum="90" TickFrequency="1"
+                            IsSnapToTickEnabled="True"
+                            Value="{Binding Servo2.Sudut, Mode=TwoWay}" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Sudut"/>
+                            <TextBox Width="60" Text="{Binding Servo2.Sudut, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Min"/>
+                            <TextBox Width="60" Text="{Binding Servo2.MinPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Maks"/>
+                            <TextBox Width="60" Text="{Binding Servo2.MaxPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Interpolasi"/>
+                            <TextBox Width="60" Text="{Binding Servo2.InterpolatedPulse, Mode=OneWay, StringFormat=N0}" IsReadOnly="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Servo 3 -->
+            <GroupBox Header="Servo 3" Grid.Column="2" Margin="5">
+                <StackPanel>
+                    <Slider Minimum="-90" Maximum="90" TickFrequency="1"
+                            IsSnapToTickEnabled="True"
+                            Value="{Binding Servo3.Sudut, Mode=TwoWay}" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Sudut"/>
+                            <TextBox Width="60" Text="{Binding Servo3.Sudut, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Min"/>
+                            <TextBox Width="60" Text="{Binding Servo3.MinPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Maks"/>
+                            <TextBox Width="60" Text="{Binding Servo3.MaxPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Interpolasi"/>
+                            <TextBox Width="60" Text="{Binding Servo3.InterpolatedPulse, Mode=OneWay, StringFormat=N0}" IsReadOnly="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+        <!-- ================= Middle Section ================= -->
+        <Grid Grid.Row="1" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- COM PORT -->
+            <GroupBox Header="COM PORT" Grid.Column="0" Margin="5">
+                <StackPanel>
+                    <ComboBox Width="100" ItemsSource="{Binding AvailablePorts}" SelectedItem="{Binding SelectedPort}" Margin="5"/>
+                    <Button Content="Open Port" Command="{Binding OpenPortCommand}" Margin="5"/>
+                    <Button Content="Close Port" Command="{Binding ClosePortCommand}" Margin="5"/>
+                    <Button Content="Origin Position" Command="{Binding OriginCommand}" Margin="5"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Robot Parameter -->
+            <GroupBox Header="Robot Parameter" Grid.Column="1" Margin="5">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="a1" Width="30"/>
+                        <TextBox Width="80" Text="{Binding A1}" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="a2" Width="30"/>
+                        <TextBox Width="80" Text="{Binding A2}" />
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Forward Kinematic -->
+            <GroupBox Header="Forward Kinematic Result" Grid.Column="2" Margin="5">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="Px" Width="30"/>
+                        <TextBox Width="100" Text="{Binding Px}" IsReadOnly="True"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
+                        <TextBlock Text="Py" Width="30"/>
+                        <TextBox Width="100" Text="{Binding Py}" IsReadOnly="True"/>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+
+            <!-- Jepit (Servo 4) -->
+            <GroupBox Header="Jepit" Grid.Column="3" Margin="5">
+                <StackPanel>
+                    <Slider Minimum="0" Maximum="180" TickFrequency="1"
+                IsSnapToTickEnabled="True"
+                Value="{Binding Servo4.Sudut, Mode=TwoWay}" />
+
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,0">
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="mm"/>
+                            <TextBox Width="60" Text="{Binding Servo4.GripMm, Mode=OneWay, StringFormat=N0}" IsReadOnly="True"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Min"/>
+                            <TextBox Width="60" Text="{Binding Servo4.MinPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Maks"/>
+                            <TextBox Width="60" Text="{Binding Servo4.MaxPulse, Mode=TwoWay}"/>
+                        </StackPanel>
+                        <StackPanel Margin="10,0">
+                            <TextBlock Text="Interpolasi"/>
+                            <TextBox Width="60" Text="{Binding Servo4.InterpolatedPulse, Mode=OneWay, StringFormat=N0}" IsReadOnly="True"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </GroupBox>
+        </Grid>
+
+        <!-- ================= Inverse Kinematic ================= -->
+        <GroupBox Header="Inverse Kinematic" Grid.Row="2" Margin="5">
+            <Grid Margin="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <!-- Header -->
+                <TextBlock Text="Solusi 1" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="0"/>
+                <TextBlock Text="Solusi 2" FontWeight="Bold" HorizontalAlignment="Center" Grid.Row="0" Grid.Column="1"/>
+
+                <!-- θ1 & θ2 sejajar -->
+                <StackPanel Orientation="Horizontal" Margin="5" Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center">
+                    <TextBlock Text="θ1" Width="30" TextAlignment="Right"/>
+                    <TextBox Width="60" Text="{Binding Theta1Sol1}" Margin="5,0"/>
+                    <TextBlock Text="θ2" Width="30" TextAlignment="Right"/>
+                    <TextBox Width="60" Text="{Binding Theta2Sol1}" Margin="5,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center">
+                    <TextBlock Text="θ1" Width="30" TextAlignment="Right"/>
+                    <TextBox Width="60" Text="{Binding Theta1Sol2}" Margin="5,0"/>
+                    <TextBlock Text="θ2" Width="30" TextAlignment="Right"/>
+                    <TextBox Width="60" Text="{Binding Theta2Sol2}" Margin="5,0"/>
+                </StackPanel>
+
+                <!-- Tombol sejajar -->
+                <StackPanel Orientation="Horizontal" Margin="5" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center">
+                    <Button Content="Calculate" Command="{Binding CalculateInverseCommand}" Margin="5,0"/>
+                    <Button Content="Run" Command="{Binding RunSolution1Command}" Margin="5,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5" Grid.Row="2" Grid.Column="1" HorizontalAlignment="Center">
+                    <Button Content="Calculate" Command="{Binding CalculateInverseCommand}" Margin="5,0"/>
+                    <Button Content="Run" Command="{Binding RunSolution2Command}" Margin="5,0"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+
+        <!-- ================= Bottom Buttons ================= -->
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Exit" Width="80" Margin="5" Command="{Binding ExitCommand}"/>
+            <Button Content="Cancel" Width="80" Margin="5" Command="{Binding ExitCommand}"/>
+        </StackPanel>
+    </Grid>
+</Window>
