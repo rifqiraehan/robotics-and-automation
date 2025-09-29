@@ -11,6 +11,7 @@ namespace Kinematics
     public partial class MainWindow : Window
     {
         private readonly SerialPort _serialPort = new SerialPort();
+        private bool _isUpdating = false;
         private double a1 => double.TryParse(TxtA1.Text, out var v1) ? v1 : 120.0;
         private double a2 => double.TryParse(TxtA2.Text, out var v2) ? v2 : 213.0;
 
@@ -30,13 +31,12 @@ namespace Kinematics
             TxtA1.IsReadOnly = false;
             TxtA2.IsReadOnly = false;
 
-            // Wire events (sliders <-> textboxes)
             SliderServo2.ValueChanged += SliderServo2_ValueChanged;
             SliderServo3.ValueChanged += SliderServo3_ValueChanged;
             SliderServo0.ValueChanged += SliderServo0_ValueChanged;
 
-            SliderServo3.ValueChanged += (s, e) => UpdateForwardFromSliders(); // ensure FK updates
-            SliderServo2.ValueChanged += (s, e) => UpdateForwardFromSliders();
+            // SliderServo3.ValueChanged += (s, e) => UpdateForwardFromSliders(); // ensure FK updates
+            // SliderServo2.ValueChanged += (s, e) => UpdateForwardFromSliders();
 
             TxtServo2Sudut.LostFocus += TxtServo2Sudut_LostFocus;
             TxtServo3Sudut.LostFocus += TxtServo3Sudut_LostFocus;
@@ -56,20 +56,17 @@ namespace Kinematics
             BtnExit.Click += BtnExit_Click;
             BtnCancel.Click += BtnCancel_Click;
 
-            // Initialize UI values (use the sliders' defaults)
             TxtServo2Sudut.Text = SliderServo2.Value.ToString("0");
             TxtServo3Sudut.Text = SliderServo3.Value.ToString("0");
             TxtServo0Sudut.Text = SliderServo0.Value.ToString("0");
 
-            // Initialize grip fields
             TxtGripMin.Text = GripPulseOpen.ToString("0");
             TxtGripMax.Text = GripPulseClose.ToString("0");
             SliderGrip.Minimum = GripPulseOpen;
             SliderGrip.Maximum = GripPulseClose;
-            SliderGrip.Value = GripPulseOpen; // open by default
+            SliderGrip.Value = GripPulseOpen;
             UpdateGripFieldsFromPulse(SliderGrip.Value);
 
-            // Compute initial FK
             UpdateForwardFromSliders();
         }
         private void LoadPorts()
@@ -81,29 +78,43 @@ namespace Kinematics
         // -----------------------
         // Event handlers - Sliders
         // -----------------------
-        private async void SliderServo0_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            double angle = SliderServo0.Value;
-            TxtServo0Sudut.Text = ((int)angle).ToString();
-            TxtServo0Interp.Text = AngleToPulse(0, angle).ToString("0");
-
-            await SendServoCommandAsync(0, (int)AngleToPulse(0, angle));
-        }
-
-
         private void SliderServo2_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_isUpdating) return;
+
             TxtServo2Sudut.Text = SliderServo2.Value.ToString("0");
+
+            UpdateForwardKinematicsUI();
+
+            _ = SendServoJointCommand(2, SliderServo2.Value);
         }
 
         private void SliderServo3_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_isUpdating) return;
+
             TxtServo3Sudut.Text = SliderServo3.Value.ToString("0");
+
+            UpdateForwardKinematicsUI();
+
+            _ = SendServoJointCommand(3, SliderServo3.Value);
+        }
+
+        private void SliderServo0_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isUpdating) return;
+
+            double angle = SliderServo0.Value;
+            TxtServo0Sudut.Text = ((int)angle).ToString();
+
+            _ = SendServoJointCommand(0, angle);
         }
 
         // Grip slider
         private async void SliderGrip_ValueChanged(object? sender, RoutedPropertyChangedEventArgs<double> e)
         {
+            if (_isUpdating) return;
+
             var pulse = SliderGrip.Value;
             TxtGripInterp.Text = ((int)pulse).ToString();
             TxtGripMm.Text = PulseToGripMm(pulse).ToString("0.00");
@@ -117,10 +128,18 @@ namespace Kinematics
         {
             if (double.TryParse(TxtServo2Sudut.Text, out var val))
             {
-                if (val < -90) val = -90;
-                if (val > 90) val = 90;
-                SliderServo2.Value = val;
-                UpdateForwardFromSliders();
+                val = Clamp(val, -90, 90);
+                _isUpdating = true;
+                try
+                {
+                    SliderServo2.Value = val;
+                }
+                finally
+                {
+                    _isUpdating = false;
+                }
+                UpdateForwardKinematicsUI();
+                _ = SendServoJointCommand(2, SliderServo2.Value);
             }
             else
             {
@@ -132,10 +151,18 @@ namespace Kinematics
         {
             if (double.TryParse(TxtServo3Sudut.Text, out var val))
             {
-                if (val < -90) val = -90;
-                if (val > 90) val = 90;
-                SliderServo3.Value = val;
-                UpdateForwardFromSliders();
+                val = Clamp(val, -90, 90);
+                _isUpdating = true;
+                try
+                {
+                    SliderServo3.Value = val;
+                }
+                finally
+                {
+                    _isUpdating = false;
+                }
+                UpdateForwardKinematicsUI();
+                _ = SendServoJointCommand(3, SliderServo3.Value);
             }
             else
             {
@@ -145,9 +172,8 @@ namespace Kinematics
 
         private void TxtPx_LostFocus(object? sender, RoutedEventArgs e)
         {
-            // If user manually changed Px/Py, compute IK immediately or leave to Calculate button.
             if (!double.TryParse(TxtPx.Text, out _))
-                UpdateForwardFromSliders(); // reset to computed FK
+                UpdateForwardFromSliders();
         }
 
         private void TxtPy_LostFocus(object? sender, RoutedEventArgs e)
@@ -174,7 +200,6 @@ namespace Kinematics
                 return;
             }
 
-            // Fill solution text fields
             TxtTheta1Sol1.Text = sols[0].theta1Deg.ToString("0.##");
             TxtTheta2Sol1.Text = sols[0].theta2Deg.ToString("0.##");
             TxtTheta1Sol2.Text = sols[1].theta1Deg.ToString("0.##");
@@ -189,11 +214,21 @@ namespace Kinematics
                 return;
             }
 
-            // Apply to sliders (clamp to allowed ranges)
             t1 = Clamp(t1, -90, 90);
             t2 = Clamp(t2, -90, 90);
-            SliderServo2.Value = t1;
-            SliderServo3.Value = t2;
+            _isUpdating = true;
+            try
+            {
+                SliderServo2.Value = t1;
+                SliderServo3.Value = t2;
+
+                TxtServo2Sudut.Text = t1.ToString("0");
+                TxtServo3Sudut.Text = t2.ToString("0");
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
             UpdateForwardFromSliders();
         }
 
@@ -207,8 +242,19 @@ namespace Kinematics
 
             t1 = Clamp(t1, -90, 90);
             t2 = Clamp(t2, -90, 90);
-            SliderServo2.Value = t1;
-            SliderServo3.Value = t2;
+            _isUpdating = true;
+            try
+            {
+                SliderServo2.Value = t1;
+                SliderServo3.Value = t2;
+
+                TxtServo2Sudut.Text = t1.ToString("0");
+                TxtServo3Sudut.Text = t2.ToString("0");
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
             UpdateForwardFromSliders();
         }
 
@@ -253,13 +299,29 @@ namespace Kinematics
 
         private void BtnOrigin_Click(object? sender, RoutedEventArgs e)
         {
-            SliderServo0.Value = 91;
-            SliderServo2.Value = 0;
-            SliderServo3.Value = 3;
-            SliderGrip.Value = GripPulseOpen;
-            UpdateForwardFromSliders();
+            const double T0 = 91;
+            const double T2 = 0;
+            const double T3 = 3;
 
-            _ = SendServoCommandAsync(1, 2250);
+            _isUpdating = true;
+            try
+            {
+                SliderServo0.Value = T0;
+                SliderServo2.Value = T2;
+                SliderServo3.Value = T3;
+                SliderGrip.Value = GripPulseOpen;
+
+                TxtServo0Sudut.Text = T0.ToString("0");
+                TxtServo2Sudut.Text = T2.ToString("0");
+                TxtServo3Sudut.Text = T3.ToString("0");
+
+                _ = SendServoCommandAsync(1, 2250);
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
+            UpdateForwardFromSliders();
         }
 
         private void BtnExit_Click(object? sender, RoutedEventArgs e)
@@ -287,7 +349,6 @@ namespace Kinematics
             TxtPx.Text = px.ToString("0.##");
             TxtPy.Text = py.ToString("0.##");
 
-            // Compute and display interpolated pulses
             var pulse0 = AngleToPulse(0, servo0Deg);
             var pulse2 = AngleToPulse(2, t1deg);
             var pulse3 = AngleToPulse(3, t2deg);
@@ -296,7 +357,6 @@ namespace Kinematics
             TxtServo2Interp.Text = pulse2.ToString("0");
             TxtServo3Interp.Text = pulse3.ToString("0");
 
-            // Send updated servo positions asynchronously
             await SendServoCommandAsync(0, (int)pulse0);
             await SendServoCommandAsync(2, (int)pulse2);
             await SendServoCommandAsync(3, (int)pulse3);
@@ -378,6 +438,30 @@ namespace Kinematics
                     MessageBox.Show($"Error sending servo data: {ex.Message}")
                 );
             }
+        }
+
+        private void UpdateForwardKinematicsUI()
+        {
+            double t1deg = SliderServo2.Value;
+            double t2deg = SliderServo3.Value;
+
+            var (px, py) = KinematicsSolver.Forward(a1, a2, t1deg, t2deg);
+
+            TxtPx.Text = px.ToString("0.##");
+            TxtPy.Text = py.ToString("0.##");
+        }
+
+        private async Task SendServoJointCommand(int channel, double angleDeg)
+        {
+            if (_isUpdating) return;
+
+            double pulse = AngleToPulse(channel, angleDeg);
+
+            if (channel == 0) TxtServo0Interp.Text = pulse.ToString("0");
+            else if (channel == 2) TxtServo2Interp.Text = pulse.ToString("0");
+            else if (channel == 3) TxtServo3Interp.Text = pulse.ToString("0");
+
+            await SendServoCommandAsync(channel, (int)pulse);
         }
     }
 
