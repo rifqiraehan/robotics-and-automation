@@ -209,6 +209,7 @@
 
                 <!-- Tombol sejajar -->
                 <StackPanel Orientation="Horizontal" Margin="5" Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center">
+                    <Button x:Name="BtnCompute" Content="Compute" Margin="5,0"/>
                     <Button x:Name="BtnCalcSol1" Content="Calculate" Margin="5,0"/>
                     <Button x:Name="BtnRunSol1" Content="Run" Margin="5,0"/>
                 </StackPanel>

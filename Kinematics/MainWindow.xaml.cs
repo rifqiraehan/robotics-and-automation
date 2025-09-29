@@ -49,6 +49,7 @@ namespace Kinematics
             BtnCalcSol2.Click += BtnCalcSol_Click;
             BtnRunSol1.Click += BtnRunSol1_Click;
             BtnRunSol2.Click += BtnRunSol2_Click;
+            BtnCompute.Click += BtnCompute_Click;
 
             BtnOpenPort.Click += BtnOpenPort_Click;
             BtnClosePort.Click += BtnClosePort_Click;
@@ -119,6 +120,30 @@ namespace Kinematics
             TxtGripInterp.Text = ((int)pulse).ToString();
             TxtGripMm.Text = PulseToGripMm(pulse).ToString("0.00");
             await SendServoCommandAsync(4, (int)pulse);
+        }
+
+        private void BtnCompute_Click(object? sender, RoutedEventArgs e)
+        {
+
+            if (!double.TryParse(TxtTheta1Sol1.Text, out var t1) ||
+                !double.TryParse(TxtTheta2Sol1.Text, out var t2))
+            {
+                MessageBox.Show("Solusi 1 (Theta 1 atau Theta 2) belum terisi atau nilainya tidak valid (numeric).");
+                return;
+            }
+
+            var (px, py) = KinematicsSolver.Forward(a1, a2, t1, t2);
+
+            _isUpdating = true;
+            try
+            {
+                TxtPx.Text = px.ToString("0.##");
+                TxtPy.Text = py.ToString("0.##");
+            }
+            finally
+            {
+                _isUpdating = false;
+            }
         }
 
         // -----------------------
