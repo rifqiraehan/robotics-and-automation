@@ -27,6 +27,8 @@ namespace Kinematics
             // Px/Py editable at runtime
             TxtPx.IsReadOnly = false;
             TxtPy.IsReadOnly = false;
+            TxtA1.IsReadOnly = false;
+            TxtA2.IsReadOnly = false;
 
             // Wire events (sliders <-> textboxes)
             SliderServo2.ValueChanged += SliderServo2_ValueChanged;
@@ -274,27 +276,30 @@ namespace Kinematics
         // -----------------------
         // Helpers - FK / IK / Clamp / Conversions
         // -----------------------
-        private void UpdateForwardFromSliders()
+        private async void UpdateForwardFromSliders()
         {
             double servo0Deg = SliderServo0.Value;
             double t1deg = SliderServo2.Value;
             double t2deg = SliderServo3.Value;
 
-            // Forward kinematics
             var (px, py) = KinematicsSolver.Forward(a1, a2, t1deg, t2deg);
 
             TxtPx.Text = px.ToString("0.##");
             TxtPy.Text = py.ToString("0.##");
 
-            // compute interpolated pulses for servo channels and show
-            TxtServo0Interp.Text = AngleToPulse(0, servo0Deg).ToString("0");
-            TxtServo2Interp.Text = AngleToPulse(2, t1deg).ToString("0");
-            TxtServo3Interp.Text = AngleToPulse(3, t2deg).ToString("0");
+            // Compute and display interpolated pulses
+            var pulse0 = AngleToPulse(0, servo0Deg);
+            var pulse2 = AngleToPulse(2, t1deg);
+            var pulse3 = AngleToPulse(3, t2deg);
 
-            // If serial open, send updated servo positions
-            _ = SendServoCommandAsync(0, (int)AngleToPulse(0, servo0Deg));
-            _ = SendServoCommandAsync(2, (int)AngleToPulse(2, t1deg));
-            _ = SendServoCommandAsync(3, (int)AngleToPulse(3, t2deg));
+            TxtServo0Interp.Text = pulse0.ToString("0");
+            TxtServo2Interp.Text = pulse2.ToString("0");
+            TxtServo3Interp.Text = pulse3.ToString("0");
+
+            // Send updated servo positions asynchronously
+            await SendServoCommandAsync(0, (int)pulse0);
+            await SendServoCommandAsync(2, (int)pulse2);
+            await SendServoCommandAsync(3, (int)pulse3);
         }
 
         private static double Clamp(double v, double min, double max) => Math.Max(min, Math.Min(max, v));
@@ -379,10 +384,15 @@ namespace Kinematics
     // Kinematics solver
     public static class KinematicsSolver
     {
+        private static double DegreesToRadians(double d) => d * Math.PI / 180.0;
+        private static double RadiansToDegrees(double r) => r * 180.0 / Math.PI;
+
         public static (double px, double py) Forward(double a1, double a2, double theta1Deg, double theta2Deg)
         {
-            double t1 = DegreesToRadians(theta1Deg);
+
+            double t1 = DegreesToRadians(theta1Deg + 90.0);
             double t2 = DegreesToRadians(theta2Deg);
+
             double px = a1 * Math.Cos(t1) + a2 * Math.Cos(t1 + t2);
             double py = a1 * Math.Sin(t1) + a2 * Math.Sin(t1 + t2);
             return (px, py);
@@ -391,25 +401,37 @@ namespace Kinematics
         public static (double theta1Deg, double theta2Deg)[]? Inverse(double a1, double a2, double px, double py)
         {
             double r2 = px * px + py * py;
+
+            if (r2 > Math.Pow(a1 + a2, 2) + 1e-6 || r2 < Math.Pow(Math.Abs(a1 - a2), 2) - 1e-6) return null;
+
             double cosT2 = (r2 - a1 * a1 - a2 * a2) / (2 * a1 * a2);
-
-            if (cosT2 < -1.0 - 1e-9 || cosT2 > 1.0 + 1e-9) return null;
-
             cosT2 = Math.Max(-1.0, Math.Min(1.0, cosT2));
+
             double t2a = Math.Acos(cosT2);
             double t2b = -t2a;
 
-            double t1a = Math.Atan2(py, px) - Math.Atan2(a2 * Math.Sin(t2a), a1 + a2 * Math.Cos(t2a));
-            double t1b = Math.Atan2(py, px) - Math.Atan2(a2 * Math.Sin(t2b), a1 + a2 * Math.Cos(t2b));
+            double t1a_std = Math.Atan2(py, px) - Math.Atan2(a2 * Math.Sin(t2a), a1 + a2 * Math.Cos(t2a));
+            double t1b_std = Math.Atan2(py, px) - Math.Atan2(a2 * Math.Sin(t2b), a1 + a2 * Math.Cos(t2b));
+
+            double t1a_offset = RadiansToDegrees(t1a_std) - 90.0;
+            double t1b_offset = RadiansToDegrees(t1b_std) - 90.0;
+
+            t1a_offset = NormalizeAngle(t1a_offset);
+            t1b_offset = NormalizeAngle(t1b_offset);
 
             return new[]
             {
-                (RadiansToDegrees(t1a), RadiansToDegrees(t2a)),
-                (RadiansToDegrees(t1b), RadiansToDegrees(t2b))
-            };
+            (t1a_offset, RadiansToDegrees(t2a)),
+            (t1b_offset, RadiansToDegrees(t2b))
+        };
         }
 
-        private static double DegreesToRadians(double d) => d * Math.PI / 180.0;
-        private static double RadiansToDegrees(double r) => r * 180.0 / Math.PI;
+        private static double NormalizeAngle(double angle)
+        {
+            angle %= 360.0;
+            if (angle > 180.0) angle -= 360.0;
+            else if (angle < -180.0) angle += 360.0;
+            return angle;
+        }
     }
 }
