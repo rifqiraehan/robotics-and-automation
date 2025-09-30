@@ -25,11 +25,14 @@ namespace Sudut
         [ObservableProperty] private double maxPulse = 2500;
         [ObservableProperty] private double interpolatedPulse;
 
+        // Reverse Mapping
+        [ObservableProperty] private bool isReversed = false;
+
         // Servo yang dikontrol user
         [ObservableProperty] private int selectedServoChannel = 3; // default channel 3
         [ObservableProperty] private ServoMode servoMode = ServoMode.Servo23;
-        /*[ObservableProperty] private int selectedServoChannel = 0; // default channel 0
-        [ObservableProperty] private ServoMode servoMode = ServoMode.Servo0;*/
+        // [ObservableProperty] private int selectedServoChannel = 0; // default channel 0
+        // [ObservableProperty] private ServoMode servoMode = ServoMode.Servo0;
 
         // === Penjepit (servo 4) ===
         [ObservableProperty] private bool clampClosed;
@@ -84,7 +87,11 @@ namespace Sudut
                         InterpolatedPulse = 0;
                         return;
                     }
-                    InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * (Sudut / 180.0);
+
+                    if (IsReversed)
+                        InterpolatedPulse = MaxPulse - (MaxPulse - MinPulse) * (Sudut / 180.0); // reverse
+                    else
+                        InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * (Sudut / 180.0); // normal
                     break;
 
                 case ServoMode.Servo23:
@@ -93,8 +100,12 @@ namespace Sudut
                         InterpolatedPulse = 0;
                         return;
                     }
+
                     double normalized = (Sudut + 90) / 180.0;
-                    InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * normalized;
+                    if (IsReversed)
+                        InterpolatedPulse = MaxPulse - (MaxPulse - MinPulse) * normalized; // reverse
+                    else
+                        InterpolatedPulse = MinPulse + (MaxPulse - MinPulse) * normalized; // normal
                     break;
             }
         }
@@ -171,6 +182,20 @@ namespace Sudut
             {
                 MessageBox.Show($"Error sending servo data: {ex.Message}");
             }
+        }
+
+        [RelayCommand]
+        private async Task SendServo1PulseAsync()
+        {
+            // Pastikan serial port terbuka
+            if (!_serialPort.IsOpen) return;
+
+            // Tentukan channel dan pulse
+            int channel = 1;  // Servo 1
+            int pulse = 2275; // Pulse yang diinginkan
+
+            // Kirim perintah
+            await SendServoCommandAsync(channel, pulse);
         }
 
         [RelayCommand(CanExecute = nameof(CanToggleClamp))]
