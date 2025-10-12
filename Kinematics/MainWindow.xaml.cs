@@ -485,8 +485,8 @@ namespace Kinematics
 
             var (px, py) = KinematicsSolver.Forward(a1, a2, t1deg, t2deg);
 
-            TxtPx.Text = px.ToString("0.##");
-            TxtPy.Text = py.ToString("0.##");
+            TxtPx.Text = px.ToString("0.###");
+            TxtPy.Text = py.ToString("0.###");
         }
 
         private async Task SendServoJointCommand(int channel, double angleDeg)
@@ -524,7 +524,10 @@ namespace Kinematics
         {
             double r2 = px * px + py * py;
 
-            if (r2 > Math.Pow(a1 + a2, 2) + 1e-6 || r2 < Math.Pow(Math.Abs(a1 - a2), 2) - 1e-6) return null;
+            if (r2 > Math.Pow(a1 + a2, 2) * 1.00001 ||
+                r2 < Math.Pow(Math.Abs(a1 - a2), 2) * 0.99999)
+                return null;
+
 
             double cosT2 = (r2 - a1 * a1 - a2 * a2) / (2 * a1 * a2);
             cosT2 = Math.Max(-1.0, Math.Min(1.0, cosT2));
