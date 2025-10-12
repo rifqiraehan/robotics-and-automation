@@ -31,6 +31,7 @@ namespace Kinematics3DoF
             BtnExit.Click += BtnExit_Click;
             BtnOrigin.Click += BtnOrigin_Click;
             BtnCancel.Click += BtnCancel_Click;
+            SliderGrip.ValueChanged += SliderGrip_ValueChanged;
 
             SliderServo0.ValueChanged += SliderServo0_ValueChanged;
             SliderServo2.ValueChanged += SliderServo2_ValueChanged;
@@ -68,6 +69,22 @@ namespace Kinematics3DoF
             UpdateForwardKinematicsUI();
             _ = SendServoJointCommand(3, SliderServo3.Value);
         }
+
+        private async void SliderGrip_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (_isUpdating) return;
+
+            double pulse = SliderGrip.Value;
+
+            TxtGripInterp.Text = ((int)pulse).ToString();
+
+            double openPercent = (pulse - 770) / (1700 - 770);
+            double mm = 380 - 380 * openPercent;
+            TxtGripMm.Text = mm.ToString("0.##");
+
+            await SendServoCommandAsync(4, (int)pulse);
+        }
+
 
         // ------------------- Button Events -------------------
         private void BtnCompute_Click(object sender, RoutedEventArgs e)
@@ -220,6 +237,7 @@ namespace Kinematics3DoF
             if (channel == 0) TxtServo0Interp.Text = pulse.ToString("0");
             else if (channel == 2) TxtServo2Interp.Text = pulse.ToString("0");
             else if (channel == 3) TxtServo3Interp.Text = pulse.ToString("0");
+            else if (channel == 4) TxtGripInterp.Text = pulse.ToString("0");
 
             await SendServoCommandAsync(channel, (int)pulse);
         }
