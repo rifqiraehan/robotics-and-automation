@@ -13,7 +13,7 @@ namespace Kinematics
         private readonly SerialPort _serialPort = new SerialPort();
         private bool _isUpdating = false;
         private double a1 => double.TryParse(TxtA1.Text, out var v1) ? v1 : 120.0;
-        private double a2 => double.TryParse(TxtA2.Text, out var v2) ? v2 : 213.0;
+        private double a2 => double.TryParse(TxtA2.Text, out var v2) ? v2 : 210.0;
 
         private const double GripPulseOpen = 770.0;   // µs -> corresponds to max open mm
         private const double GripPulseClose = 1700.0; // µs -> corresponds to fully closed (0 mm)
@@ -107,6 +107,8 @@ namespace Kinematics
 
             double angle = SliderServo0.Value;
             TxtServo0Sudut.Text = ((int)angle).ToString();
+
+            UpdateForwardKinematicsUI();
 
             _ = SendServoJointCommand(0, angle);
         }
@@ -244,17 +246,19 @@ namespace Kinematics
             _isUpdating = true;
             try
             {
-                SliderServo2.Value = t1;
-                SliderServo3.Value = t2;
+                SliderServo0.Value = t1;
+                SliderServo2.Value = t2;
 
-                TxtServo2Sudut.Text = t1.ToString("0");
-                TxtServo3Sudut.Text = t2.ToString("0");
+                TxtServo0Sudut.Text = t1.ToString("0");
+                TxtServo2Sudut.Text = t2.ToString("0");
             }
             finally
             {
                 _isUpdating = false;
             }
-            UpdateForwardFromSliders();
+            // UpdateForwardFromSliders();
+            _ = SendServoJointCommand(0, t1);
+            _ = SendServoJointCommand(2, t2);
         }
 
         private void BtnRunSol2_Click(object? sender, RoutedEventArgs e)
@@ -270,17 +274,19 @@ namespace Kinematics
             _isUpdating = true;
             try
             {
-                SliderServo2.Value = t1;
-                SliderServo3.Value = t2;
+                SliderServo0.Value = t1;
+                SliderServo2.Value = t2;
 
-                TxtServo2Sudut.Text = t1.ToString("0");
-                TxtServo3Sudut.Text = t2.ToString("0");
+                TxtServo0Sudut.Text = t1.ToString("0");
+                TxtServo2Sudut.Text = t2.ToString("0");
             }
             finally
             {
                 _isUpdating = false;
             }
-            UpdateForwardFromSliders();
+            // UpdateForwardFromSliders();
+            _ = SendServoJointCommand(0, t1);
+            _ = SendServoJointCommand(2, t2);
         }
 
         private void BtnOpenPort_Click(object? sender, RoutedEventArgs e)
@@ -365,18 +371,17 @@ namespace Kinematics
         // -----------------------
         private async void UpdateForwardFromSliders()
         {
-            double servo0Deg = SliderServo0.Value;
-            double t1deg = SliderServo2.Value;
-            double t2deg = SliderServo3.Value;
+            double t1deg = SliderServo0.Value;
+            double t2deg = SliderServo2.Value;
 
             var (px, py) = KinematicsSolver.Forward(a1, a2, t1deg, t2deg);
 
             TxtPx.Text = px.ToString("0.##");
             TxtPy.Text = py.ToString("0.##");
 
-            var pulse0 = AngleToPulse(0, servo0Deg);
-            var pulse2 = AngleToPulse(2, t1deg);
-            var pulse3 = AngleToPulse(3, t2deg);
+            var pulse0 = AngleToPulse(0, t1deg);
+            var pulse2 = AngleToPulse(2, t2deg);
+            var pulse3 = AngleToPulse(3, SliderServo3.Value);
 
             TxtServo0Interp.Text = pulse0.ToString("0");
             TxtServo2Interp.Text = pulse2.ToString("0");
@@ -391,8 +396,6 @@ namespace Kinematics
 
         private double AngleToPulse(int channel, double angleDeg)
         {
-            // channel 0 and 4 : angle range 0..180
-            // channel 2 & 3     : angle range -90..90  (we map to 0..180 internally)
             double minPulse = double.TryParse(
                 channel == 0 ? TxtServo0Min.Text :
                 channel == 2 ? TxtServo2Min.Text :
@@ -405,17 +408,27 @@ namespace Kinematics
                 channel == 3 ? TxtServo3Max.Text :
                 TxtGripMax.Text, out var xp) ? xp : 2500;
 
-            double normalized;
-            if (channel == 0 || channel == 4)
+            double minAngleDeg, maxAngleDeg;
+
+            if (channel == 0)
             {
-                normalized = angleDeg / 180.0; // 0..1
+                minAngleDeg = -90;
+                maxAngleDeg = 90;
+            }
+            else if (channel == 2 || channel == 3)
+            {
+                minAngleDeg = -90;
+                maxAngleDeg = 90;
             }
             else
             {
-                normalized = (angleDeg + 90.0) / 180.0; // map -90..90 -> 0..1
+                minAngleDeg = 0;
+                maxAngleDeg = 180;
             }
 
-            normalized = Clamp(normalized, 0.0, 1.0);
+            double angle = Clamp(angleDeg, minAngleDeg, maxAngleDeg);
+
+            double normalized = (angle - minAngleDeg) / (maxAngleDeg - minAngleDeg);
             return minPulse + (maxPulse - minPulse) * normalized;
         }
 
@@ -467,8 +480,8 @@ namespace Kinematics
 
         private void UpdateForwardKinematicsUI()
         {
-            double t1deg = SliderServo2.Value;
-            double t2deg = SliderServo3.Value;
+            double t1deg = SliderServo0.Value;
+            double t2deg = SliderServo2.Value;
 
             var (px, py) = KinematicsSolver.Forward(a1, a2, t1deg, t2deg);
 
@@ -499,7 +512,7 @@ namespace Kinematics
         public static (double px, double py) Forward(double a1, double a2, double theta1Deg, double theta2Deg)
         {
 
-            double t1 = DegreesToRadians(theta1Deg + 90.0);
+            double t1 = DegreesToRadians(theta1Deg);
             double t2 = DegreesToRadians(theta2Deg);
 
             double px = a1 * Math.Cos(t1) + a2 * Math.Cos(t1 + t2);
@@ -522,8 +535,8 @@ namespace Kinematics
             double t1a_std = Math.Atan2(py, px) - Math.Atan2(a2 * Math.Sin(t2a), a1 + a2 * Math.Cos(t2a));
             double t1b_std = Math.Atan2(py, px) - Math.Atan2(a2 * Math.Sin(t2b), a1 + a2 * Math.Cos(t2b));
 
-            double t1a_offset = RadiansToDegrees(t1a_std) - 90.0;
-            double t1b_offset = RadiansToDegrees(t1b_std) - 90.0;
+            double t1a_offset = RadiansToDegrees(t1a_std);
+            double t1b_offset = RadiansToDegrees(t1b_std);
 
             t1a_offset = NormalizeAngle(t1a_offset);
             t1b_offset = NormalizeAngle(t1b_offset);

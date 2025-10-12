@@ -1,7 +1,7 @@
 ﻿<Window x:Class="Kinematics.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Sudut" Height="500" Width="1000"
+        Title="Kinematics" Height="500" Width="1000"
         ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
 
     <Grid Margin="10">
@@ -131,7 +131,7 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="a2" Width="30"/>
-                        <TextBox x:Name="TxtA2" Width="80" Text="213" IsReadOnly="True"/>
+                        <TextBox x:Name="TxtA2" Width="80" Text="210" IsReadOnly="True"/>
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
