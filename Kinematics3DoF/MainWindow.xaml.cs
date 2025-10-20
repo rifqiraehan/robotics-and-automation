@@ -72,8 +72,6 @@ namespace Kinematics3DoF
 
         private async void SliderGrip_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (_isUpdating) return;
-
             double pulse = SliderGrip.Value;
 
             TxtGripInterp.Text = ((int)pulse).ToString();
@@ -81,6 +79,8 @@ namespace Kinematics3DoF
             double openPercent = (pulse - 770) / (1700 - 770);
             double mm = 380 - 380 * openPercent;
             TxtGripMm.Text = mm.ToString("0.##");
+
+            if (_isUpdating) return;
 
             await SendServoCommandAsync(4, (int)pulse);
         }
@@ -267,12 +267,28 @@ namespace Kinematics3DoF
 
         private double AngleToPulse(int channel, double angleDeg)
         {
-            // Default min/max pulse
-            double minPulse = 500, maxPulse = 2500;
-            double minAngle = -90, maxAngle = 90;
+            double minPulse = double.TryParse(
+                channel == 0 ? TxtServo0Min.Text :
+                channel == 2 ? TxtServo2Min.Text :
+                channel == 3 ? TxtServo3Min.Text :
+                TxtGripMin.Text, out var mp) ? mp : 500;
 
-            double normalized = (angleDeg - minAngle) / (maxAngle - minAngle);
-            return minPulse + (maxPulse - minPulse) * normalized;
+            double maxPulse = double.TryParse(
+                channel == 0 ? TxtServo0Max.Text :
+                channel == 2 ? TxtServo2Max.Text :
+                channel == 3 ? TxtServo3Max.Text :
+                TxtGripMax.Text, out var xp) ? xp : 2500;
+
+            double minAngleDeg = -90.0, maxAngleDeg = 90.0;
+
+            double angle = Clamp(angleDeg, minAngleDeg, maxAngleDeg);
+
+            double normalized = (angle - minAngleDeg) / (maxAngleDeg - minAngleDeg);
+            double pulse = minPulse + (maxPulse - minPulse) * normalized;
+
+            pulse = Clamp(pulse, Math.Min(minPulse, maxPulse), Math.Max(minPulse, maxPulse));
+
+            return pulse;
         }
 
         private void MoveRobot(double t1, double t2, double t3)
@@ -289,7 +305,12 @@ namespace Kinematics3DoF
                 _isUpdating = false;
             }
 
+            TxtServo0Sudut.Text = SliderServo0.Value.ToString("0");
+            TxtServo2Sudut.Text = SliderServo2.Value.ToString("0");
+            TxtServo3Sudut.Text = SliderServo3.Value.ToString("0");
+
             UpdateForwardFromSliders();
+
             _ = SendServoJointCommand(0, t1);
             _ = SendServoJointCommand(2, t2);
             _ = SendServoJointCommand(3, t3);
