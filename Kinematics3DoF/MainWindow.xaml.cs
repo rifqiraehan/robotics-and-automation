@@ -12,8 +12,8 @@ namespace Kinematics3DoF
         private bool _isUpdating = false;
 
         private double a1 => double.TryParse(TxtA1.Text, out var v1) ? v1 : 120.0;
-        private double a2 => double.TryParse(TxtA2.Text, out var v2) ? v2 : 210.0;
-        private double a3 => double.TryParse(TxtA3.Text, out var v3) ? v3 : 100.0;
+        private double a2 => double.TryParse(TxtA2.Text, out var v2) ? v2 : 130.0;
+        private double a3 => double.TryParse(TxtA3.Text, out var v3) ? v3 : 85.0;
 
         public MainWindow()
         {
@@ -197,7 +197,9 @@ namespace Kinematics3DoF
 
         private void BtnOrigin_Click(object sender, RoutedEventArgs e)
         {
-            MoveRobot(0, 0, 0);
+            // MoveRobot(0, 0, 0);
+            MoveRobot(4, -3, -4);
+            _ = SendServoCommandAsync(1, 2220);
         }
 
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
@@ -248,7 +250,7 @@ namespace Kinematics3DoF
             try
             {
                 byte[] header = { 0x0D, 0x0A };
-                string bodyStr = $"#{channel} P{pulse:D4} S1000 ";
+                string bodyStr = $"#{channel} P{pulse:D4} S500 ";
                 byte[] body = Encoding.ASCII.GetBytes(bodyStr);
                 byte[] tail = { 0x0D, 0x0A, 0x00 };
                 byte[] fullCommand = new byte[header.Length + body.Length + tail.Length];
@@ -341,3 +343,4 @@ namespace Kinematics3DoF
         }
     }
 }
+

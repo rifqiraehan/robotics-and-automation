@@ -131,11 +131,11 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="a2" Width="30"/>
-                        <TextBox x:Name="TxtA2" Width="80" Text="210" IsReadOnly="True"/>
+                        <TextBox x:Name="TxtA2" Width="80" Text="130" IsReadOnly="True"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <TextBlock Text="a3" Width="30"/>
-                        <TextBox x:Name="TxtA3" Width="80" Text="100" IsReadOnly="True"/>
+                        <TextBox x:Name="TxtA3" Width="80" Text="85" IsReadOnly="True"/>
                     </StackPanel>
                 </StackPanel>
             </GroupBox>
