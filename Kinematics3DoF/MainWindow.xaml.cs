@@ -265,27 +265,56 @@ namespace Kinematics3DoF
             }
         }
 
+        private static double Interpolate(double x, double x1, double y1, double x2, double y2)
+        {
+            if (x1 == x2)
+            {
+                return (y1 + y2) / 2;
+            }
+            return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
+        }
+
         private double AngleToPulse(int channel, double angleDeg)
         {
             double minPulse = double.TryParse(
-                channel == 0 ? TxtServo0Min.Text :
-                channel == 2 ? TxtServo2Min.Text :
-                channel == 3 ? TxtServo3Min.Text :
-                TxtGripMin.Text, out var mp) ? mp : 500;
+              channel == 0 ? TxtServo0Min.Text :
+              channel == 2 ? TxtServo2Min.Text :
+              channel == 3 ? TxtServo3Min.Text :
+              TxtGripMin.Text, out var mp) ? mp : 500;
 
             double maxPulse = double.TryParse(
-                channel == 0 ? TxtServo0Max.Text :
-                channel == 2 ? TxtServo2Max.Text :
-                channel == 3 ? TxtServo3Max.Text :
-                TxtGripMax.Text, out var xp) ? xp : 2500;
+              channel == 0 ? TxtServo0Max.Text :
+              channel == 2 ? TxtServo2Max.Text :
+              channel == 3 ? TxtServo3Max.Text :
+              TxtGripMax.Text, out var xp) ? xp : 2500;
 
-            double minAngleDeg = -90.0, maxAngleDeg = 90.0;
+            double pulse;
+            double minAngleDeg, maxAngleDeg;
 
-            double angle = Clamp(angleDeg, minAngleDeg, maxAngleDeg);
+            switch (channel)
+            {
+                case 0:
+                    minAngleDeg = 0;
+                    maxAngleDeg = 180;
+                    pulse = Interpolate(angleDeg, minAngleDeg, maxPulse, maxAngleDeg, minPulse);
+                    break;
+                case 2:
+                    minAngleDeg = -90;
+                    maxAngleDeg = 90;
+                    pulse = Interpolate(angleDeg, minAngleDeg, maxPulse, maxAngleDeg, minPulse);
+                    break;
 
-            double normalized = (angle - minAngleDeg) / (maxAngleDeg - minAngleDeg);
-            double pulse = minPulse + (maxPulse - minPulse) * normalized;
-
+                case 3:
+                    minAngleDeg = -90;
+                    maxAngleDeg = 90;
+                    pulse = Interpolate(angleDeg, minAngleDeg, maxPulse, maxAngleDeg, minPulse);
+                    break;
+                default:
+                    minAngleDeg = -90;
+                    maxAngleDeg = 90;
+                    pulse = Interpolate(angleDeg, minAngleDeg, minPulse, maxAngleDeg, maxPulse);
+                    break;
+            }
             pulse = Clamp(pulse, Math.Min(minPulse, maxPulse), Math.Max(minPulse, maxPulse));
 
             return pulse;
