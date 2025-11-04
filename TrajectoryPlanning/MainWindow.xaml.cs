@@ -32,10 +32,15 @@ namespace TrajectoryPlanning
         private bool _isConnected = false;
 
         private readonly int ch0 = 0, ch1 = 1, ch2 = 2, ch3 = 3;
-        private readonly double pwmMinCh0 = 2380, pwmMaxCh0 = 570;
-        private readonly double pwmMinCh1 = 2410, pwmMaxCh1 = 510;
-        private readonly double pwmMinCh2 = 2450, pwmMaxCh2 = 610;
-        private readonly double pwmMinCh3 = 2360, pwmMaxCh3 = 560;
+        //private readonly double pwmMinCh0 = 2380, pwmMaxCh0 = 570;
+        //private readonly double pwmMinCh1 = 2410, pwmMaxCh1 = 510;
+        //private readonly double pwmMinCh2 = 2450, pwmMaxCh2 = 610;
+        //private readonly double pwmMinCh3 = 2360, pwmMaxCh3 = 560;
+
+        private readonly double pwmMinCh0 = 2500, pwmMaxCh0 = 500;
+        private readonly double pwmMinCh1 = 2500, pwmMaxCh1 = 500;
+        private readonly double pwmMinCh2 = 2500, pwmMaxCh2 = 500;
+        private readonly double pwmMinCh3 = 2500, pwmMaxCh3 = 500;
 
         private Ellipse? m_workspaceEllipse;
         private const double GridSquareMm = 10.0;
@@ -298,7 +303,7 @@ namespace TrajectoryPlanning
         {
             if (!double.TryParse(TxtA1.Text, out _a1Val) || _a1Val <= 0) _a1Val = 120.0;
             if (!double.TryParse(TxtA2.Text, out _a2Val) || _a2Val <= 0) _a2Val = 130.0;
-            if (!double.TryParse(TxtA3.Text, out _a3Val) || _a3Val <= 0) _a3Val = 85.0;
+            if (!double.TryParse(TxtA3.Text, out _a3Val) || _a3Val <= 0) _a3Val = 80.0;
         }
 
         private void AddJointEllipse(double cx, double cy, double r, Brush fill)
@@ -501,8 +506,8 @@ namespace TrajectoryPlanning
             if (Connect(port!))
             {
                 BtnConnect.IsEnabled = false; BtnDisconnect.IsEnabled = true;
-                SendRawCommand($"#{ch0} P1480 T1000"); SendRawCommand($"#{ch1} P740 T1000");
-                SendRawCommand($"#{ch2} P1530 T1000"); SendRawCommand($"#{ch3} P1450 T1000");
+                SendRawCommand($"#{ch0} P1544 T1000"); SendRawCommand($"#{ch1} P2220 T1000");
+                SendRawCommand($"#{ch2} P1467 T1000"); SendRawCommand($"#{ch3} P1456 T1000");
             }
             else { MessageBox.Show("Gagal membuka port " + port); }
         }
@@ -517,8 +522,8 @@ namespace TrajectoryPlanning
         private void BtnOriginPose_Click(object sender, RoutedEventArgs e)
         {
             if (!_isConnected) { MessageBox.Show("Port belum terbuka. Silakan Connect terlebih dahulu."); return; }
-            SendRawCommand($"#{ch0} P1480 T1000"); SendRawCommand($"#{ch1} P740 T1000");
-            SendRawCommand($"#{ch2} P1530 T1000"); SendRawCommand($"#{ch3} P1450 T1000");
+            SendRawCommand($"#{ch0} P1544 T1000"); SendRawCommand($"#{ch1} P2220 T1000");
+            SendRawCommand($"#{ch2} P1467 T1000"); SendRawCommand($"#{ch3} P1456 T1000");
         }
 
         private void ListJointSpace_SelectionChanged(object sender, SelectionChangedEventArgs e)
